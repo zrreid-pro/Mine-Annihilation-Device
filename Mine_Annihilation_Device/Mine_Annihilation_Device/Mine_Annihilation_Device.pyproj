@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>8d4fbef0-5f25-45c9-b012-4a84c6fbee17</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Mine_Annihilation_Device.py</StartupFile>
+    <StartupFile>Game_Driver.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
