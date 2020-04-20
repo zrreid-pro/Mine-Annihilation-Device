@@ -17,7 +17,7 @@ class MAD:
 
     def survey_minefield(self, minefield):
         self.minefield = minefield
-        self.move_made = []
+        self.moves_made = []
         #do the work
         pass
 
