@@ -13,7 +13,7 @@ class MAD:
         """
         self.minefield = None
         self.moves_made = None
-        self.current_strategy = 0
+        self.current_strategy = 1
 
     def survey_minefield(self, minefield):
         self.minefield = minefield
