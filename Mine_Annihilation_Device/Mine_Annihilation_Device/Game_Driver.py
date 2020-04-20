@@ -1,20 +1,18 @@
 #This is the file that will run the Minesweeper game
 import Minesweeper as game
+import Mine_Annihilation_Device as mad
 
 
 
 
 
 
-m = game.Minefield(1)
-m.print_minefield()
-m.dig(3,0)
-m.print_minefield()
 
-#m2 = game.Minefield(2)
-#m2.print_minefield()
+mf = game.Minefield(1)
+bot = mad.MAD()
+bot.survey_minefield(mf)
+bot.show_work()
+mf.print_answer_minefield()
 
-#m3 = game.Minefield(3)
-#m3.print_minefield()
 
     
