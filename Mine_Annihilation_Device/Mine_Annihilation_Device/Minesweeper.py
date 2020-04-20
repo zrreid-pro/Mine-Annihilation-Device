@@ -131,6 +131,8 @@ class Minefield:
             line = " |"
             for c in range(self.n):
                 line += " "
+
+                #This one is for testing and just shows the locations of the mines
                 if self.isFlagged(r,c):
                     line += "F"
                 elif self.isMine(r,c):
@@ -140,8 +142,9 @@ class Minefield:
                 else:
                     line += str(self.neighbor_mine_count(r,c))
                 line += " "
+                ################################################################
 
-
+                #This one is for the real game
                 #if self.isFlagged(r,c):
                 #    line += "F"
                 #elif not self.isVisited(r,c):
@@ -154,6 +157,7 @@ class Minefield:
                 #    else:
                 #        line += str(self.neighbor_mine_count(r,c))
                 #line += " "
+
                 line += "|"
             print(line)
             print(" " + "----"*self.n + "-")
