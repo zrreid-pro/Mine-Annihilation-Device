@@ -7,18 +7,21 @@ class MAD:
         """This is a class of minesweeper solving AI.
 
         Options for current strategy are given as integers with the following meaning:
-            1: Random Selection Strategy
+            0: Random Selection Strategy
+            1: Straightfoward Approach
             2: Multisquare Algorithm
             3: Tank Algorithm
         """
         self.minefield = None
         self.moves_made = None
-        self.current_strategy = 1
+        self.mines_remaining = 0
+        self.current_strategy = 0
 
     def survey_minefield(self, minefield):
         self.minefield = minefield
+        self.mines_remaining = minefield.mine_total
         self.moves_made = []
-        #do the work
+        self.find_mines()
         pass
 
     def random_move(self, valid_moves):
@@ -28,7 +31,25 @@ class MAD:
             if (row,col) in valid_moves:
                 return (row, col)
 
+    def search_cell(self, cell):
+        self.minefield.search(cell)
 
     def show_work(self):
         """Prints the AI's current working Minefield"""
         self.minefield.print_working_minefield()
+
+    def find_mines(self):
+        """This is the overall solving method."""
+        #do the work
+        move = None
+        valid = self.minefield.get_valid_moves()
+        if self.current_strategy == 0: #random move
+            move = self.random_move(valid)
+        elif self.current_strategy == 1: #straightfoward
+            pass
+        elif self.current_strategy == 2: #multisquare
+            pass
+        else: #tank
+            pass
+
+        pass
