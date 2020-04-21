@@ -16,10 +16,12 @@ class MAD:
         self.moves_made = None
         self.mines_remaining = 0
         self.current_strategy = 0
+        self.current_valid_moves = []
 
     def survey_minefield(self, minefield):
         self.minefield = minefield
         self.mines_remaining = minefield.mine_total
+        self.current_valid_moves = self.minefield.get_valid_moves()
         self.moves_made = []
         self.find_mines()
         pass
@@ -33,12 +35,17 @@ class MAD:
 
     def search_cell(self, cell):
         self.minefield.search(cell)
+        self.current_valid_moves.remove(cell)
+
+    def flag_cell(self, cell):
+        self.minefield.flag(cell)
+        self.current_valid_moves.remove(cell)
 
     def show_work(self):
         """Prints the AI's current working Minefield"""
         self.minefield.print_working_minefield()
 
-    def find_mines(self):
+    def find_mines(self, ):
         """This is the overall solving method."""
         #do the work
         move = None
