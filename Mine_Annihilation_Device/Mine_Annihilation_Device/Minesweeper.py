@@ -227,28 +227,28 @@ class Minefield:
 
     def print_working_minefield(self):
        """Prints the current minefield as seen by the AI at its current progress."""
-        print(self.mine_list)
-        print("\n\n")
-        print(" " + "----"*self.size + "-")
-        for row in range(self.size):
-            line = " |"
-            for col in range(self.size):
-                line += " "
+       print(self.mine_list)
+       print("\n\n")
+       print(" " + "----"*self.size + "-")
+       for row in range(self.size):
+           line = " |"
+           for col in range(self.size):
+               line += " "
 
-                if self.is_flagged((row,col)): #the cell has been flagged
-                    line += "F"
-                elif not self.is_visited((row,col)): #the cell has not been visited
-                    line += " "
-                elif self.is_mine((row,col)): #the cell contains a mine
-                    line += "M"
-                else:
-                    if self.neighbor_mine_count((row,col)) == 0:
-                        line += "V" #the cell has been visited but does not have neighboring mines
-                    else:
-                        line += str(self.neighbor_mine_count((row,col))) #the cell has been visited but it has at least one neighboring mine
-                line += " "
+               if self.is_flagged((row,col)): #the cell has been flagged
+                   line += "F"
+               elif not self.is_visited((row,col)): #the cell has not been visited
+                   line += " "
+               elif self.is_mine((row,col)): #the cell contains a mine
+                   line += "M"
+               else:
+                   if self.neighbor_mine_count((row,col)) == 0:
+                       line += "V" #the cell has been visited but does not have neighboring mines
+                   else:
+                       line += str(self.neighbor_mine_count((row,col))) #the cell has been visited but it has at least one neighboring mine
+               line += " "
 
-                line += "|"
-            print(line)
-            print(" " + "----"*self.size + "-")
-        print("\n\n")
+               line += "|"
+           print(line)
+           print(" " + "----"*self.size + "-")
+       print("\n\n")
