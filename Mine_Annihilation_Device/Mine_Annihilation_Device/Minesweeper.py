@@ -2,6 +2,7 @@
 import random as rand
 import numpy as np
 
+
 class Minefield:
 
     def __init__(self, difficulty):
@@ -13,6 +14,7 @@ class Minefield:
             2: Intermediate(16*16 field with 40 mines)
             3: Expert(24*24 field with 99 mines)
         """
+        self.solver = None
         self.difficulty = difficulty
         self.game_over = False
         self.size = 0
@@ -53,11 +55,44 @@ class Minefield:
         for i in range(self.size):
             for j in range(self.size):
                 self.field_dict[(i,j)] = False
+        
+        #self.mine_list.add((0,3))
+        #self.field[0][3] = -1
+        #self.add_dangerous_neighbor((0,3))
+        #self.mine_list.add((1,3))
+        #self.field[1][3] = -1
+        #self.add_dangerous_neighbor((1,3))
+        #self.mine_list.add((2,3))
+        #self.field[2][3] = -1
+        #self.add_dangerous_neighbor((2,3))
+        #self.mine_list.add((3,3))
+        #self.field[3][3] = -1
+        #self.add_dangerous_neighbor((3,3))
+        #self.mine_list.add((3,0))
+        #self.field[3][0] = -1
+        #self.add_dangerous_neighbor((3,0))
+        #self.mine_list.add((3,1))
+        #self.field[3][1] = -1
+        #self.add_dangerous_neighbor((3,1))
+        #self.mine_list.add((3,2))
+        #self.field[3][2] = -1
+        #self.add_dangerous_neighbor((3,2))
+
+        #self.mine_list.add((3,4))
+        #self.field[3][4] = -1
+        #self.add_dangerous_neighbor((3,4))
+        #self.mine_list.add((4,3))
+        #self.field[4][3] = -1
+        #self.add_dangerous_neighbor((4,3))
+        #self.mine_list.add((4,4))
+        #self.field[4][4] = -1
+        #self.add_dangerous_neighbor((4,4))
 
         row = 0
         col = 0
         i = 0
-        while i <= self.mine_total:
+        
+        while i < self.mine_total:
             row = rand.randint(0, self.size-1)
             col = rand.randint(0, self.size-1)
             self.mine_list.add((row,col))
@@ -82,8 +117,13 @@ class Minefield:
                 self.field[n[0]][n[1]] += 1
 
     def get_field_size(self):
-        """Returns the size attribute of the minefield"""
-        return self.size
+        """Returns the total number of cells in the minefield"""
+        return self.size*self.size
+
+    
+
+    def set_solver(self, solver):
+        self.solver = solver
 
     def get_neighbors(self, cell):
         """Returns a list of all the neighbors of the argument cell."""
@@ -107,21 +147,52 @@ class Minefield:
 
         return neighbors
 
-    def get_simpler_neighbors(self, cell):
-        """Returns a list of the neighbors of the argument cell that are in the four main directions.
-        This is a helper function to be used with get_empty_neighbors.
-        """
+    def get_unvisited_neighbors(self, cell):
+        """Returns a list of all the unvisited neighbors of the argument cell."""
+        #Might need to use is_empty instead
         neighbors = []
         if cell[1] != 0: #left
-            neighbors.append((cell[0], cell[1]-1))
+            if not self.is_visited((cell[0], cell[1]-1)):
+                neighbors.append((cell[0], cell[1]-1))            
         if cell[1] != self.size-1: #right
-            neighbors.append((cell[0], cell[1]+1))
+            if not self.is_visited((cell[0], cell[1]+1)):
+                neighbors.append((cell[0], cell[1]+1))
         if cell[0] != 0: #up
-            neighbors.append((cell[0]-1, cell[1]))
+            if not self.is_visited((cell[0]-1, cell[1])):
+                neighbors.append((cell[0]-1, cell[1]))
         if cell[0] != self.size-1: #down
-            neighbors.append((cell[0]+1, cell[1]))
+            if not self.is_visited((cell[0]+1, cell[1])):
+                neighbors.append((cell[0]+1, cell[1]))
+        if cell[0] != 0 and cell[1] != 0: #upper-left
+            if not self.is_visited((cell[0]-1, cell[1]-1)):
+                neighbors.append((cell[0]-1, cell[1]-1))
+        if cell[0] != 0 and cell[1] != self.size-1: #upper-right
+            if not self.is_visited((cell[0]-1, cell[1]+1)):
+                neighbors.append((cell[0]-1, cell[1]+1))
+        if cell[0] != self.size-1 and cell[1] != 0: #lower-left
+            if not self.is_visited((cell[0]+1, cell[1]-1)):
+                neighbors.append((cell[0]+1, cell[1]-1))
+        if cell[0] != self.size-1 and cell[1] != self.size-1: #lower-right
+            if not self.is_visited((cell[0]+1, cell[1]+1)):
+                neighbors.append((cell[0]+1, cell[1]+1))
 
         return neighbors
+
+    #def get_simpler_neighbors(self, cell):
+    #    """Returns a list of the neighbors of the argument cell that are in the four main directions.
+    #    This is a helper function to be used with get_empty_neighbors.
+    #    """
+    #    neighbors = []
+    #    if cell[1] != 0: #left
+    #        neighbors.append((cell[0], cell[1]-1))
+    #    if cell[1] != self.size-1: #right
+    #        neighbors.append((cell[0], cell[1]+1))
+    #    if cell[0] != 0: #up
+    #        neighbors.append((cell[0]-1, cell[1]))
+    #    if cell[0] != self.size-1: #down
+    #        neighbors.append((cell[0]+1, cell[1]))
+
+    #    return neighbors
 
     def is_mine(self, cell):
         """Returns whether the argument cell is a mine."""
@@ -132,6 +203,7 @@ class Minefield:
 
     def is_visited(self, cell):
         """Returns whether the argument cell has been visited."""
+        #return (self.field_dict[(cell[0],cell[1])] and not self.is_flagged(cell))
         return self.field_dict[(cell[0],cell[1])]
 
     def valid_search(self, cell):
@@ -140,15 +212,22 @@ class Minefield:
 
     def search(self, cell):
         """Performs a normal search of the cell."""
-        self.field_dict[(cell[0],cell[1])] = True
-        self.working_field[cell[0]][cell[1]] = self.field[cell[0]][cell[1]]
-        if self.working_field[cell[0]][cell[1]] == 0:
-            self.clear_empties(cell)
+        if not self.field_dict[(cell[0],cell[1])]:
+            self.solver.update_history(cell)
+            self.field_dict[(cell[0],cell[1])] = True
+            self.working_field[cell[0]][cell[1]] = self.field[cell[0]][cell[1]]
+            if self.working_field[cell[0]][cell[1]] == -1:
+                self.game_over = True
+                self.solver.boom(cell)
+            if self.working_field[cell[0]][cell[1]] == 0:
+                self.clear_empties(cell)
+            
+        
 
-    def visit(self, cell):
-        """A helper function for clear_empties. Simply visits a cell."""
-        self.field_dict[(cell[0],cell[1])] = True
-        self.working_field[cell[0]][cell[1]] = self.field[cell[0]][cell[1]]
+    #def visit(self, cell):
+    #    """A helper function for clear_empties. Simply visits a cell."""
+    #    self.field_dict[(cell[0],cell[1])] = True
+    #    self.working_field[cell[0]][cell[1]] = self.field[cell[0]][cell[1]]
         
 
     def is_flagged(self, cell):
@@ -163,34 +242,41 @@ class Minefield:
         """Returns the displayed number of neighboring mines for the argument cell."""
         return self.field[cell[0]][cell[1]]
 
+    #Might not be needed but keeping it here just in case for now
     def is_empty(self, cell):
         """Returns whether the cell is an unvisited and unflagged cell with no mine neighbors."""
         return (self.count_neighbor_mines(cell) == 0 and not self.is_flagged(cell) and not self.is_visited(cell))
 
-    def get_empty_neighbors(self, cell):
-        """Returns a list of the argument cell's neighbors that are also empty."""
-        neighbors = self.get_simpler_neighbors(cell)
-        empties = []
-        for n in neighbors:
-            if self.is_empty(n):
-                empties.append(n)
-        return empties
+    def is_nervous(self, cell):
+        """Returns whether the cell has been visited and has at least one neighboring mine."""
+        return (self.is_visited(cell) and self.count_neighbor_mines(cell) > 0)
+
+    #def get_empty_neighbors(self, cell):
+    #    """Returns a list of the argument cell's neighbors that are also empty."""
+    #    neighbors = self.get_simpler_neighbors(cell)
+    #    empties = []
+    #    for n in neighbors:
+    #        if self.is_empty(n):
+    #            empties.append(n)
+    #    return empties
 
     def clear_empties(self, cell):
         """Flood fills the empty cells that neighbor the argument cell."""
-        neighbors = self.get_empty_neighbors(cell)
+        #neighbors = self.get_empty_neighbors(cell)
+        neighbors = self.get_neighbors(cell)
         if len(neighbors) > 0:
             for n in neighbors:
-                self.visit(n)
-                self.clear_empties(n)
+                self.search(n)
+                #self.visit(n)
+                #self.clear_empties(n)
 
         pass
 
     def get_valid_moves(self):
         """Returns a list of the valid moves given the current state of the working minefield"""
         move_list = []
-        for row in len(self.size):
-            for col in len(self.size):
+        for row in range(self.size):
+            for col in range(self.size):
                 if self.valid_search((row,col)):
                     move_list.append((row,col))
         return move_list
@@ -205,19 +291,15 @@ class Minefield:
                 line += " "
 
                 if self.is_mine((row,col)): #the cell contains a mine
-                    if self.is_flagged((row,col)): #the cell's mine has been flagged
-                        line += "F/M"
+                    if self.is_flagged((row,col)): #the cell's mine has been flagged and therefore defused
+                        line += "D"
                     else: #the cell's mine has not been flagged
                         line += "M"
                 elif self.is_flagged((row,col)): #the cell is not a mine but was flagged
-                    line += "F"
-                elif not self.is_visited((row,col)): #the cell has not been visited
-                    line += " "                
+                    line += "F"              
                 else:
-                    if self.neighbor_mine_count((row,col)) == 0:
-                        line += "V" #the cell has been visited but does not have neighboring mines
-                    else:
-                        line += str(self.neighbor_mine_count((row,col))) #the cell has been visited but it has at least one neighboring mine
+                    line += str(self.count_neighbor_mines((row,col))) #the cell is not a mine
+                    
                 line += " "
 
                 line += "|"
@@ -227,8 +309,25 @@ class Minefield:
 
     def print_working_minefield(self):
        """Prints the current minefield as seen by the AI at its current progress."""
+<<<<<<< HEAD
        print(self.mine_list)
        print("\n\n")
+=======
+       #print(self.mine_list)
+       print()
+       outcome = self.solver.report_outcome()
+       if len(outcome) == 1:
+           print("Win!")
+       elif outcome[0] == 2:
+           print("Lose!")
+           print("Boomed at cell: " + str(outcome[1]))
+       else:
+           print("Fluke!")
+           print("Boomed at cell: " + str(outcome[1]))
+       print("Found Mine Cells: " + str(self.solver.mine_cells))
+       print("Mines Remaining: " + str(self.solver.mines_remaining))
+       print("\n")
+>>>>>>> f4f541ba4c182fc7cc4c2993e6f5f063a1cd6d38
        print(" " + "----"*self.size + "-")
        for row in range(self.size):
            line = " |"
@@ -242,6 +341,7 @@ class Minefield:
                elif self.is_mine((row,col)): #the cell contains a mine
                    line += "M"
                else:
+<<<<<<< HEAD
                    if self.neighbor_mine_count((row,col)) == 0:
                        line += "V" #the cell has been visited but does not have neighboring mines
                    else:
@@ -252,3 +352,19 @@ class Minefield:
            print(line)
            print(" " + "----"*self.size + "-")
        print("\n\n")
+=======
+                   if self.count_neighbor_mines((row,col)) == 0:
+                       line += "V" #the cell has been visited but does not have neighboring mines
+                   else:
+                       line += str(self.count_neighbor_mines((row,col))) #the cell has been visited but it has at least one neighboring mine
+               line += " |"
+           print(line)
+           print(" " + "----"*self.size + "-")
+       print("\n\n----------------------------------------------------------------------------------------------")
+       pass
+
+    def temp_way_to_check_for_game_over(self):
+       moves = self.get_valid_moves()
+       if len(moves) == 0:
+           self.game_over = True
+>>>>>>> f4f541ba4c182fc7cc4c2993e6f5f063a1cd6d38
