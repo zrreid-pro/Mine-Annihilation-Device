@@ -28,9 +28,7 @@ class Minefield:
         else:
             self.size = 24
             self.mine_total = 99
-        #self.field = np.zeros((self.size, self.size), dtype=str)
         self.field = np.zeros((self.size, self.size), dtype=int)
-        #self.player_field = np.full((self.size, self.size), "*", dtype=str)
         self.working_field = np.zeros((self.size, self.size), dtype=int)
 
         #self.cell_total = self.size**2
@@ -56,37 +54,46 @@ class Minefield:
             for j in range(self.size):
                 self.field_dict[(i,j)] = False
         
-        #self.mine_list.add((0,3))
-        #self.field[0][3] = -1
-        #self.add_dangerous_neighbor((0,3))
-        #self.mine_list.add((1,3))
-        #self.field[1][3] = -1
-        #self.add_dangerous_neighbor((1,3))
-        #self.mine_list.add((2,3))
-        #self.field[2][3] = -1
-        #self.add_dangerous_neighbor((2,3))
+        ##1
+        #self.mine_list.add((6,4))
+        #self.field[6][4] = -1
+        #self.add_dangerous_neighbor((6,4))
+        ##2
+        #self.mine_list.add((4,7))
+        #self.field[4][7] = -1
+        #self.add_dangerous_neighbor((4,7))
+        ##3
+        #self.mine_list.add((6,7))
+        #self.field[6][7] = -1
+        #self.add_dangerous_neighbor((6,7))
+        ##4
+        #self.mine_list.add((4,6))
+        #self.field[4][6] = -1
+        #self.add_dangerous_neighbor((4,6))
+        ##5
         #self.mine_list.add((3,3))
         #self.field[3][3] = -1
         #self.add_dangerous_neighbor((3,3))
-        #self.mine_list.add((3,0))
-        #self.field[3][0] = -1
-        #self.add_dangerous_neighbor((3,0))
-        #self.mine_list.add((3,1))
-        #self.field[3][1] = -1
-        #self.add_dangerous_neighbor((3,1))
-        #self.mine_list.add((3,2))
-        #self.field[3][2] = -1
-        #self.add_dangerous_neighbor((3,2))
-
-        #self.mine_list.add((3,4))
-        #self.field[3][4] = -1
-        #self.add_dangerous_neighbor((3,4))
-        #self.mine_list.add((4,3))
-        #self.field[4][3] = -1
-        #self.add_dangerous_neighbor((4,3))
-        #self.mine_list.add((4,4))
-        #self.field[4][4] = -1
-        #self.add_dangerous_neighbor((4,4))
+        ##6
+        #self.mine_list.add((6,6))
+        #self.field[6][6] = -1
+        #self.add_dangerous_neighbor((6,6))
+        ##7
+        #self.mine_list.add((6,1))
+        #self.field[6][1] = -1
+        #self.add_dangerous_neighbor((6,1))
+        ##8
+        #self.mine_list.add((8,8))
+        #self.field[8][8] = -1
+        #self.add_dangerous_neighbor((8,8))
+        ##9
+        #self.mine_list.add((3,6))
+        #self.field[3][6] = -1
+        #self.add_dangerous_neighbor((3,6))
+        ##10
+        #self.mine_list.add((3,5))
+        #self.field[3][5] = -1
+        #self.add_dangerous_neighbor((3,5))
 
         row = 0
         col = 0
@@ -178,6 +185,143 @@ class Minefield:
 
         return neighbors
 
+    def get_visited_neighbors(self, cell):
+        neighbors = []
+        if cell[1] != 0: #left
+            if self.is_visited((cell[0], cell[1]-1)):
+                neighbors.append((cell[0], cell[1]-1))            
+        if cell[1] != self.size-1: #right
+            if self.is_visited((cell[0], cell[1]+1)):
+                neighbors.append((cell[0], cell[1]+1))
+        if cell[0] != 0: #up
+            if self.is_visited((cell[0]-1, cell[1])):
+                neighbors.append((cell[0]-1, cell[1]))
+        if cell[0] != self.size-1: #down
+            if self.is_visited((cell[0]+1, cell[1])):
+                neighbors.append((cell[0]+1, cell[1]))
+        if cell[0] != 0 and cell[1] != 0: #upper-left
+            if self.is_visited((cell[0]-1, cell[1]-1)):
+                neighbors.append((cell[0]-1, cell[1]-1))
+        if cell[0] != 0 and cell[1] != self.size-1: #upper-right
+            if self.is_visited((cell[0]-1, cell[1]+1)):
+                neighbors.append((cell[0]-1, cell[1]+1))
+        if cell[0] != self.size-1 and cell[1] != 0: #lower-left
+            if self.is_visited((cell[0]+1, cell[1]-1)):
+                neighbors.append((cell[0]+1, cell[1]-1))
+        if cell[0] != self.size-1 and cell[1] != self.size-1: #lower-right
+            if self.is_visited((cell[0]+1, cell[1]+1)):
+                neighbors.append((cell[0]+1, cell[1]+1))
+
+        return neighbors
+
+    def count_flagged_neighbors(self, cell):
+        flagged = 0
+        if cell[1] != 0: #left
+            if self.is_flagged((cell[0], cell[1]-1)):
+                flagged += 1           
+        if cell[1] != self.size-1: #right
+            if self.is_flagged((cell[0], cell[1]+1)):
+                flagged += 1
+        if cell[0] != 0: #up
+            if self.is_flagged((cell[0]-1, cell[1])):
+                flagged += 1
+        if cell[0] != self.size-1: #down
+            if self.is_flagged((cell[0]+1, cell[1])):
+                flagged += 1
+        if cell[0] != 0 and cell[1] != 0: #upper-left
+            if self.is_flagged((cell[0]-1, cell[1]-1)):
+                flagged += 1
+        if cell[0] != 0 and cell[1] != self.size-1: #upper-right
+            if self.is_flagged((cell[0]-1, cell[1]+1)):
+                flagged += 1
+        if cell[0] != self.size-1 and cell[1] != 0: #lower-left
+            if self.is_flagged((cell[0]+1, cell[1]-1)):
+                flagged += 1
+        if cell[0] != self.size-1 and cell[1] != self.size-1: #lower-right
+            if self.is_flagged((cell[0]+1, cell[1]+1)):
+                flagged += 1
+
+        return flagged
+
+    def get_constraining_neighbors(self, cell):
+        neighbors = []
+        if cell[1] != 0: #left
+            if self.is_flagged((cell[0], cell[1]-1)) or self.effective_count((cell[0], cell[1]-1)) > 0:
+                neighbors.append((cell[0], cell[1]-1))            
+        if cell[1] != self.size-1: #right
+            if self.is_flagged((cell[0], cell[1]+1)) or self.effective_count((cell[0], cell[1]+1)) > 0:
+                neighbors.append((cell[0], cell[1]+1))
+        if cell[0] != 0: #up
+            if self.is_flagged((cell[0]-1, cell[1])) or self.effective_count((cell[0]-1, cell[1])) > 0:
+                neighbors.append((cell[0]-1, cell[1]))
+        if cell[0] != self.size-1: #down
+            if self.is_flagged((cell[0]+1, cell[1])) or self.effective_count((cell[0]+1, cell[1])) > 0:
+                neighbors.append((cell[0]+1, cell[1]))
+        if cell[0] != 0 and cell[1] != 0: #upper-left
+            if self.is_flagged((cell[0]-1, cell[1]-1)) or self.effective_count((cell[0]-1, cell[1]-1)) > 0:
+                neighbors.append((cell[0]-1, cell[1]-1))
+        if cell[0] != 0 and cell[1] != self.size-1: #upper-right
+            if self.is_flagged((cell[0]-1, cell[1]+1)) or self.effective_count((cell[0]-1, cell[1]+1)) > 0:
+                neighbors.append((cell[0]-1, cell[1]+1))
+        if cell[0] != self.size-1 and cell[1] != 0: #lower-left
+            if self.is_flagged((cell[0]+1, cell[1]-1)) or self.effective_count((cell[0]+1, cell[1]-1)) > 0:
+                neighbors.append((cell[0]+1, cell[1]-1))
+        if cell[0] != self.size-1 and cell[1] != self.size-1: #lower-right
+            if self.is_flagged((cell[0]+1, cell[1]+1)) or self.effective_count((cell[0]+1, cell[1]+1)) > 0:
+                neighbors.append((cell[0]+1, cell[1]+1))
+
+        return neighbors
+
+    def is_chained(self, cell_1, cell_2):
+        if cell_1[1] != 0: #left
+            if self.compare_cells((cell_1[0],cell_1[1]-1),cell_2):
+                return True            
+        if cell_1[1] != self.size-1: #right
+            if self.compare_cells((cell_1[0],cell_1[1]+1),cell_2):
+                return True
+        if cell_1[0] != 0: #up
+            if self.compare_cells((cell_1[0]-1,cell_1[1]),cell_2):
+                return True
+        if cell_1[0] != self.size-1: #down
+            if self.compare_cells((cell_1[0]+1,cell_1[1]),cell_2):
+                return True
+        if cell_1[0] != 0 and cell_1[1] != 0: #upper-left
+            if self.compare_cells((cell_1[0]-1,cell_1[1]-1),cell_2):
+                return True
+        if cell_1[0] != 0 and cell_1[1] != self.size-1: #upper-right
+            if self.compare_cells((cell_1[0]-1,cell_1[1]+1),cell_2):
+                return True
+        if cell_1[0] != self.size-1 and cell_1[1] != 0: #lower-left
+            if self.compare_cells((cell_1[0]+1,cell_1[1]-1),cell_2):
+                return True
+        if cell_1[0] != self.size-1 and cell_1[1] != self.size-1: #lower-right
+            if self.compare_cells((cell_1[0]+1,cell_1[1]+1),cell_2):
+                return True
+
+        return False
+
+    def compare_cells(self, cell_1, cell_2):
+        return (cell_1[0] == cell_2[0] and cell_1[1] == cell_2[1])
+
+    def is_irrelevant(self, cell):
+        neighbors = self.get_neighbors(cell)
+        for n in neighbors:
+            if self.effective_count(n) != 0:
+                return False
+        return True
+
+
+    def effective_count(self, cell):
+        if self.is_flagged(cell):
+            return 9
+        elif not self.is_visited(cell):
+            return 0
+        else:
+            #val = self.working_field[cell[0]][cell[1]] - self.count_flagged_neighbors(cell)
+            #return val
+            return self.working_field[cell[0]][cell[1]] - self.count_flagged_neighbors(cell)
+
+
     #def get_simpler_neighbors(self, cell):
     #    """Returns a list of the neighbors of the argument cell that are in the four main directions.
     #    This is a helper function to be used with get_empty_neighbors.
@@ -228,6 +372,38 @@ class Minefield:
     #    """A helper function for clear_empties. Simply visits a cell."""
     #    self.field_dict[(cell[0],cell[1])] = True
     #    self.working_field[cell[0]][cell[1]] = self.field[cell[0]][cell[1]]
+
+    def is_border_cell(self, cell):
+        return (cell[0] == 0 or cell[0] == self.size-1 or cell[1] == 0 or cell[1] == self.size-1)
+
+    def is_interesting(self, cell):
+        if cell[1] != 0: #left
+            if self.is_visited((cell[0], cell[1]-1)):
+                return True            
+        if cell[1] != self.size-1: #right
+            if self.is_visited((cell[0], cell[1]+1)):
+                return True
+        if cell[0] != 0: #up
+            if self.is_visited((cell[0]-1, cell[1])):
+                return True
+        if cell[0] != self.size-1: #down
+            if self.is_visited((cell[0]+1, cell[1])):
+                return True
+        if cell[0] != 0 and cell[1] != 0: #upper-left
+            if self.is_visited((cell[0]-1, cell[1]-1)):
+                return True
+        if cell[0] != 0 and cell[1] != self.size-1: #upper-right
+            if self.is_visited((cell[0]-1, cell[1]+1)):
+                return True
+        if cell[0] != self.size-1 and cell[1] != 0: #lower-left
+            if self.is_visited((cell[0]+1, cell[1]-1)):
+                return True
+        if cell[0] != self.size-1 and cell[1] != self.size-1: #lower-right
+            if self.is_visited((cell[0]+1, cell[1]+1)):
+                return True
+
+        return False
+        
         
 
     def is_flagged(self, cell):
@@ -309,17 +485,19 @@ class Minefield:
 
     def print_working_minefield(self):
        """Prints the current minefield as seen by the AI at its current progress."""
-       #print(self.mine_list)
+       print("Mine Locations: " + str(self.mine_list))
        print()
-       outcome = self.solver.report_outcome()
-       if len(outcome) == 1:
-           print("Win!")
-       elif outcome[0] == 2:
-           print("Lose!")
-           print("Boomed at cell: " + str(outcome[1]))
-       else:
-           print("Fluke!")
-           print("Boomed at cell: " + str(outcome[1]))
+       if self.game_over:
+           outcome = self.solver.report_outcome()
+           if len(outcome) == 1:
+               print("Win!")
+           elif outcome[0] == 2:
+               print("Lose!")
+               print("Boomed at cell: " + str(outcome[1]))
+           else:
+               print("Fluke!")
+               print("Boomed at cell: " + str(outcome[1]))
+       
        print("Found Mine Cells: " + str(self.solver.mine_cells))
        print("Mines Remaining: " + str(self.solver.mines_remaining))
        print("\n")
