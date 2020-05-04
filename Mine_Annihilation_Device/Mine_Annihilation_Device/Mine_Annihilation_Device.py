@@ -268,21 +268,22 @@ class MAD:
     #If any of the cell's neighbors' counts becomes a negative, the placement is invalid and it returns an empty list
     #The ignore arg is a list of cells to ignore.
     #These are cells that arent touching the potential mine cells or the numbered cells bordering the potential mine cells
-    def validate_placement(self, tank_field, cell, ignore):
-        tank_field[cell[0]][cell[1]] = 9
+    def validate_placement(self, tank_field, cell, area, ignore):
+        new_field = np.copy(tank_field)
+        new_field[cell[0]][cell[1]] = 11
         neighbors = self.minefield.get_neighbors(cell)
         for n in neighbors:
-            if not n in ignore:
-                tank_field[n[0]][n[1]] -= 1
-                if tank_field[n[0]][n[1]] < 0:
+            if not n in ignore and new_field[n[0]][n[1]] != 11 and new_field[n[0]][n[1]] != 9 and not n in area:
+                new_field[n[0]][n[1]] -= 1
+                if new_field[n[0]][n[1]] < 0:
                     return []
 
-        return tank_field #The placement works and so the possible placement is accepted
+        return new_field #The placement works and so the possible placement is accepted
 
 
     #This is supposed to generate a possible configuration of mines in the potential cells
     
-    def generate_possible_solution(self, tank_field, area, mines, ignore=[]):
+    def generate_possible_solution(self, tank_field, area, total_area, mines, ignore=[]):
         if mines == 0:
             return tank_field
         elif len(area) == 0:
@@ -295,13 +296,14 @@ class MAD:
                     if tank_field[i][j] == 0 and not (i,j) in area:
                         ignore.append((i,j))
 
-
-        next_field = self.validate_placement(tank_field, area[0], ignore)
-
+        
+        next_field = self.validate_placement(tank_field, area[0], total_area, ignore)
+        print("Attempted to place: " + str(area[0]))
+        print("Next Field:\n" + str(next_field))
         if len(next_field) == 0:
-            solution = self.generate_possible_solution(tank_field, area[1:], mines, ignore)
+            solution = self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore)
         else:
-            solution = self.generate_possible_solution(next_field, area[1:], mines-1, ignore)
+            solution = self.generate_possible_solution(next_field, area[1:], total_area, mines-1, ignore)
 
 
 
@@ -314,7 +316,7 @@ class MAD:
         possible_solutions = set([])
         max_mines = self.mines_remaining
 
-        solution = self.generate_possible_solution(tank_field,area,max_mines)
+        solution = self.generate_possible_solution(tank_field, area, area, max_mines)
         print("Solution:\n" + str(solution))
 
         #for i in range(self.minefield.size):
