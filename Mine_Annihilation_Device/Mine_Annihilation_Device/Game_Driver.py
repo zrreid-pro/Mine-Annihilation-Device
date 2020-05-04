@@ -9,7 +9,7 @@ import Mine_Annihilation_Device as mad
 #######################################################
 #Change variables in this section for different results
 difficulty = 3
-iterations = 10
+iterations = 5
 #######################################################
 
 wins = 0

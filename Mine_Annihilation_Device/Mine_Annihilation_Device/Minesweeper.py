@@ -309,10 +309,6 @@ class Minefield:
 
     def print_working_minefield(self):
        """Prints the current minefield as seen by the AI at its current progress."""
-<<<<<<< HEAD
-       print(self.mine_list)
-       print("\n\n")
-=======
        #print(self.mine_list)
        print()
        outcome = self.solver.report_outcome()
@@ -327,7 +323,6 @@ class Minefield:
        print("Found Mine Cells: " + str(self.solver.mine_cells))
        print("Mines Remaining: " + str(self.solver.mines_remaining))
        print("\n")
->>>>>>> f4f541ba4c182fc7cc4c2993e6f5f063a1cd6d38
        print(" " + "----"*self.size + "-")
        for row in range(self.size):
            line = " |"
@@ -341,18 +336,6 @@ class Minefield:
                elif self.is_mine((row,col)): #the cell contains a mine
                    line += "M"
                else:
-<<<<<<< HEAD
-                   if self.neighbor_mine_count((row,col)) == 0:
-                       line += "V" #the cell has been visited but does not have neighboring mines
-                   else:
-                       line += str(self.neighbor_mine_count((row,col))) #the cell has been visited but it has at least one neighboring mine
-               line += " "
-
-               line += "|"
-           print(line)
-           print(" " + "----"*self.size + "-")
-       print("\n\n")
-=======
                    if self.count_neighbor_mines((row,col)) == 0:
                        line += "V" #the cell has been visited but does not have neighboring mines
                    else:
@@ -367,4 +350,3 @@ class Minefield:
        moves = self.get_valid_moves()
        if len(moves) == 0:
            self.game_over = True
->>>>>>> f4f541ba4c182fc7cc4c2993e6f5f063a1cd6d38
