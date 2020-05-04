@@ -33,6 +33,7 @@ class MAD:
         #self.working_field = None
 
         self.current_valid_moves = [] #These are the moves left to make
+        self.tanked = False
 
     def survey_minefield(self, minefield):
         self.minefield = minefield
@@ -340,6 +341,9 @@ class MAD:
         for result in range(len(results)):
             percentage_results[result] = results[result]/total_configs
 
+        #print("Tank Area:\n" + str(area))
+        #print("Tank Results:\n" + str(percentage_results))
+
         return percentage_results
 
     def determine_best_move(self, area):
@@ -387,6 +391,7 @@ class MAD:
 
 
     def tank(self):
+        self.tanked = True
         focus_cells = []
         for cell in self.current_valid_moves: #Narrows it down to border cells
             if self.minefield.is_interesting(cell):
@@ -405,13 +410,14 @@ class MAD:
         else:
             separate = self.identify_relevant_area(focus_cells)
 
-        print("Separate Area(s): " + str(separate))
+        #print("Separate Area(s): " + str(separate))
+        #print("At Length: " + str(len(separate)))
 
         possible_moves = []
         for section in separate:
             possible_moves.append(self.determine_best_move(section))
 
-        print("Possible Tank Moves: " + str(possible_moves))
+        #print("Possible Tank Moves: " + str(possible_moves))
 
         min_percentage = 1
         min_index = 0
@@ -443,9 +449,9 @@ class MAD:
             move = self.random_move(self.current_valid_moves)
             if(move not in self.mine_cells) and (move not in self.moves_made):
                 self.search_cell(move)
-                print("Random Move: " + str(move))
+                #print("Random Move: " + str(move))
                 self.turn += 1
-                self.show_work()
+                #self.show_work()
                 self.minefield.temp_way_to_check_for_game_over()
             self.traverse_field()
             
@@ -474,28 +480,28 @@ class MAD:
         while(not self.minefield.game_over and self.mines_remaining > 0):
             if not self.tank_on_standby:
                 if len(self.moves_made) > self.tank_standby_condition:
-                    print("Tank Starting Up!")
+                    #print("Tank Starting Up!")
                     self.tank_on_standby = True
 
             moves = self.multisquare()
-            print("Multi-square Moves: " + str(moves))
+            #print("Multi-square Moves: " + str(moves))
             if not moves:
                 if self.tank_on_standby:
-                    print("Tank Start!")
+                    #print("Tank Start!")
                     move = self.tank()
                     self.search_cell(move)
-                    print("Tank Time: " + str(move))
+                    #print("Tank Time: " + str(move))
                 else:
                     move = self.current_valid_moves[0]
                     self.search_cell(move)
-                    print("Multi-square had squat: " + str(move))              
-                self.show_work()
+                    #print("Multi-square had squat: " + str(move))              
+                #self.show_work()
             else:
                 while len(moves) > 0:
                     move = moves.pop()
                     self.search_cell(move)
-                    print("Multi-square Move: " + str(move))
-                    self.show_work()
+                    #print("Multi-square Move: " + str(move))
+                    #self.show_work()
                     if self.minefield.game_over:
                         break
 

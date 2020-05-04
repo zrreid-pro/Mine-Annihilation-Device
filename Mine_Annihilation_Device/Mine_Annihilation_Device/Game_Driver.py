@@ -9,7 +9,7 @@ import Mine_Annihilation_Device as mad
 #######################################################
 #Change variables in this section for different results
 difficulty = 2
-iterations = 1
+iterations = 10
 #######################################################
 
 wins = 0
@@ -24,8 +24,8 @@ flukes = 0
 
 
 #while loses == 0:
-while wins == 0 and loses == 0:
-#for i in range(iterations):
+#while wins == 0 and loses == 0:
+for i in range(iterations):
     mf = game.Minefield(difficulty)
     bot = mad.MAD()
     outcome = bot.survey_minefield(mf)
@@ -49,7 +49,8 @@ print("Total Number of Games: " + str(iterations))
 print("Number of Wins: " + str(wins))
 print("Number of Loses: " + str(loses))
 print("Number of Flukes: " + str(flukes))
-#print("Win Percentage: " + str((wins/(iterations - flukes))*100))
+print("Engaged Tank: " + str(bot.tanked))
+print("Win Percentage: " + str((wins/(iterations - flukes))*100))
 
 #bot.show_work()
 
