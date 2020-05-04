@@ -16,14 +16,17 @@ class MAD:
         self.minefield = None #This is the game of minesweeper
         self.moves_made = None #This is move history
         self.turn = 0
-        self.initial_stage_break_condition = 0 #Beginner (12), Intermediate (38), Expert (86)
+        self.initial_stage_break_condition = 0 #Beginner (12), Intermediate (38), Expert (86) this changed
         self.initial_stage_break = False
+        self.tank_standby_condition = 0 
+        self.tank_on_standby = False
         self.endgame_threshold = 8 #Needed for tank
         self.mines_remaining = 0 #Needed for tank
         self.current_strategy = 0 #Probably isnt needed anymore
         self.mine_cells = set([]) #This is the set of mine spaces
         self.outcome = 1 #This tells if the AI has won (1), lost (2), or fluked (3)
         self.boom_cell = None #This is the mine cell that the AI accidentally picked
+        self.current_tank_configurations = []
 
         #I think it might make more sense to have the AI keep track of the working board
         #but need to return to that thought later
@@ -37,7 +40,8 @@ class MAD:
         #self.working_field = np.zeros((self.minefield.size, self.minefield.size), dtype=int)
 
         self.mines_remaining = minefield.mine_total
-        self.initial_stage_break_condition = int(minefield.get_field_size()*0.15)
+        self.initial_stage_break_condition = int(minefield.get_field_size()*0.2)
+        self.tank_standby_condition = int(minefield.get_field_size()*0.2)
         self.current_valid_moves = self.minefield.get_valid_moves()
         self.moves_made = []
         self.minefield.set_solver(self)
@@ -285,9 +289,15 @@ class MAD:
     
     def generate_possible_solution(self, tank_field, area, total_area, mines, ignore=[]):
         if mines == 0:
-            return tank_field
+            #self.current_tank_configurations.add(tank_field)
+            self.current_tank_configurations.append(tank_field)
+            return
+            #return tank_field
         elif len(area) == 0:
-            return tank_field
+            #self.current_tank_configurations.add(tank_field)
+            self.current_tank_configurations.append(tank_field)
+            return
+            #return tank_field
 
         if not ignore:
             #ignore = []
@@ -296,28 +306,59 @@ class MAD:
                     if tank_field[i][j] == 0 and not (i,j) in area:
                         ignore.append((i,j))
 
-        
+        #solutions = []
         next_field = self.validate_placement(tank_field, area[0], total_area, ignore)
-        print("Attempted to place: " + str(area[0]))
-        print("Next Field:\n" + str(next_field))
+        #print("Attempted to place: " + str(area[0]))
+        #print("Next Field:\n" + str(next_field))
         if len(next_field) == 0:
-            solution = self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore)
+            self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore)
+            #solutions.append(self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore))
+            #self.current_tank_configurations.append()
         else:
-            solution = self.generate_possible_solution(next_field, area[1:], total_area, mines-1, ignore)
+            #solutions.append(self.generate_possible_solution(next_field, area[1:], total_area, mines-1, ignore))
+            #solutions.append(self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore))
+            self.generate_possible_solution(next_field, area[1:], total_area, mines-1, ignore)
+            self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore)
 
 
+        return
 
+    def crunch_the_numbers(self, area):
+        total_configs = 0
+        results = np.zeros(len(area), dtype=int)
+        percentage_results = np.zeros(len(area), dtype=float)
+        for config in self.current_tank_configurations:
+            for n in range(len(area)):
+                i = area[n][0]
+                j = area[n][1]
+                if config[i][j] == 11:
+                    results[n] += 1
+            total_configs += 1
 
-        return solution
+        #print("Total Configs: " + str(total_configs))
+        #print("Results: " + str(results))
+        for result in range(len(results)):
+            percentage_results[result] = results[result]/total_configs
+
+        return percentage_results
 
     def determine_best_move(self, area):
         tank_field = self.generate_relevant_field()
-        print("Tank Field:\n" + str(tank_field))
-        possible_solutions = set([])
+        #print("Tank Field:\n" + str(tank_field))
+        #possible_solutions = set([])
         max_mines = self.mines_remaining
+        self.current_tank_configurations = []
+        self.generate_possible_solution(tank_field, area, area, max_mines)
+        results = self.crunch_the_numbers(area)
+        min_index = np.argmin(results)
+        return (area[min_index], results[min_index])
+        #solutions = self.generate_possible_solution(tank_field, area, area, max_mines)
+        #for s in range(len(self.current_tank_configurations)):
+        #    print("Solution " + str(s+1) + "\n" + str(self.current_tank_configurations[s]))
 
-        solution = self.generate_possible_solution(tank_field, area, area, max_mines)
-        print("Solution:\n" + str(solution))
+
+
+        #print("Solution:\n" + str(solution))
 
         #for i in range(self.minefield.size):
         #    for j in range(self.minefield.size):
@@ -340,7 +381,7 @@ class MAD:
 
 
 
-        return
+        #return
 
     
 
@@ -350,7 +391,7 @@ class MAD:
         for cell in self.current_valid_moves: #Narrows it down to border cells
             if self.minefield.is_interesting(cell):
                 focus_cells.append(cell)
-        print("Tank Cells: " + str(focus_cells))
+        #print("Tank Cells: " + str(focus_cells))
 
         endgame = False
         if ((len(self.current_valid_moves)-len(focus_cells)) > self.endgame_threshold):
@@ -364,21 +405,23 @@ class MAD:
         else:
             separate = self.identify_relevant_area(focus_cells)
 
-        print("Separate: " + str(separate))
+        print("Separate Area(s): " + str(separate))
 
+        possible_moves = []
         for section in separate:
-            self.determine_best_move(section)
+            possible_moves.append(self.determine_best_move(section))
 
-        #con_cells = []
-        #for cell in focus_cells:
-        #    con_cells = self.minefield.get_constraining_neighbors(cell)
-        #    print("For cell: " + str(cell) + "\nCon Neighbors: " + str(con_cells))
+        print("Possible Tank Moves: " + str(possible_moves))
 
-        #area = []
-        #for cell in focus_cells:
-        #    area = self.identify_relevant_area(cell)
+        min_percentage = 1
+        min_index = 0
 
-        pass
+        for i in range(len(possible_moves)):
+            if possible_moves[i][1] < min_percentage:
+                min_percentage = possible_moves[i][1]
+                min_index = i
+
+        return possible_moves[min_index][0]
 
     def boom(self, cell):
         """
@@ -396,27 +439,28 @@ class MAD:
         ##########################################################################
         #Beginning Stage
         ##########################################################################
-        while(self.turn < 2 and not self.minefield.game_over):
-            #move = self.random_move(self.current_valid_moves)
-            #if(move not in self.mine_cells) and (move not in self.moves_made):
-            #    self.search_cell(move)
-            #    print("Random Move: " + str(move))
-            #    self.turn += 1
-            #    self.show_work()
-            #self.traverse_field()
+        while(not self.initial_stage_break and not self.minefield.game_over):
+            move = self.random_move(self.current_valid_moves)
+            if(move not in self.mine_cells) and (move not in self.moves_made):
+                self.search_cell(move)
+                print("Random Move: " + str(move))
+                self.turn += 1
+                self.show_work()
+                self.minefield.temp_way_to_check_for_game_over()
+            self.traverse_field()
             
-            move = (0,0)
-            self.search_cell(move)
-            #print("Random Move: " + str(move))
-            self.turn += 1
-            #self.show_work()
-            self.traverse_field()
-            move = (2,3)
-            self.search_cell(move)
-            #print("Random Move: " + str(move))
-            self.turn += 1
-            #self.show_work()
-            self.traverse_field()
+            #move = (0,0)
+            #self.search_cell(move)
+            ##print("Random Move: " + str(move))
+            #self.turn += 1
+            ##self.show_work()
+            #self.traverse_field()
+            #move = (2,3)
+            #self.search_cell(move)
+            ##print("Random Move: " + str(move))
+            #self.turn += 1
+            ##self.show_work()
+            #self.traverse_field()
 
             if len(self.moves_made) >= self.initial_stage_break_condition:
                 #Currently doesn't count flagging a cell as making a move so it may be something to adjust later
@@ -428,20 +472,30 @@ class MAD:
         self.initial_stage_break = True
 
         while(not self.minefield.game_over and self.mines_remaining > 0):
+            if not self.tank_on_standby:
+                if len(self.moves_made) > self.tank_standby_condition:
+                    print("Tank Starting Up!")
+                    self.tank_on_standby = True
+
             moves = self.multisquare()
-            #print("Multi-square Moves: " + str(moves))
+            print("Multi-square Moves: " + str(moves))
             if not moves:
-                self.tank()
-                move = self.current_valid_moves[0]
-                self.search_cell(move)
-                #print("Multi-square had squat: " + str(move))
-                #self.show_work()
+                if self.tank_on_standby:
+                    print("Tank Start!")
+                    move = self.tank()
+                    self.search_cell(move)
+                    print("Tank Time: " + str(move))
+                else:
+                    move = self.current_valid_moves[0]
+                    self.search_cell(move)
+                    print("Multi-square had squat: " + str(move))              
+                self.show_work()
             else:
                 while len(moves) > 0:
                     move = moves.pop()
                     self.search_cell(move)
-                    #print("Multi-square Move: " + str(move))
-                    #self.show_work()
+                    print("Multi-square Move: " + str(move))
+                    self.show_work()
                     if self.minefield.game_over:
                         break
 
@@ -458,6 +512,3 @@ class MAD:
             while len(self.current_valid_moves) > 0:
                 self.search_cell(self.current_valid_moves[0])
         ##########################################################################
-
-
-        pass

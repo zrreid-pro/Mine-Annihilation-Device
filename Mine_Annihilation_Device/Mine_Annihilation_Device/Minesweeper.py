@@ -54,61 +54,61 @@ class Minefield:
             for j in range(self.size):
                 self.field_dict[(i,j)] = False
         
-        #1
-        self.mine_list.add((6,4))
-        self.field[6][4] = -1
-        self.add_dangerous_neighbor((6,4))
-        #2
-        self.mine_list.add((4,7))
-        self.field[4][7] = -1
-        self.add_dangerous_neighbor((4,7))
-        #3
-        self.mine_list.add((6,7))
-        self.field[6][7] = -1
-        self.add_dangerous_neighbor((6,7))
-        #4
-        self.mine_list.add((4,6))
-        self.field[4][6] = -1
-        self.add_dangerous_neighbor((4,6))
-        #5
-        self.mine_list.add((3,3))
-        self.field[3][3] = -1
-        self.add_dangerous_neighbor((3,3))
-        #6
-        self.mine_list.add((6,6))
-        self.field[6][6] = -1
-        self.add_dangerous_neighbor((6,6))
-        #7
-        self.mine_list.add((6,1))
-        self.field[6][1] = -1
-        self.add_dangerous_neighbor((6,1))
-        #8
-        self.mine_list.add((8,8))
-        self.field[8][8] = -1
-        self.add_dangerous_neighbor((8,8))
-        #9
-        self.mine_list.add((3,6))
-        self.field[3][6] = -1
-        self.add_dangerous_neighbor((3,6))
-        #10
-        self.mine_list.add((3,5))
-        self.field[3][5] = -1
-        self.add_dangerous_neighbor((3,5))
+        ##1
+        #self.mine_list.add((6,4))
+        #self.field[6][4] = -1
+        #self.add_dangerous_neighbor((6,4))
+        ##2
+        #self.mine_list.add((4,7))
+        #self.field[4][7] = -1
+        #self.add_dangerous_neighbor((4,7))
+        ##3
+        #self.mine_list.add((6,7))
+        #self.field[6][7] = -1
+        #self.add_dangerous_neighbor((6,7))
+        ##4
+        #self.mine_list.add((4,6))
+        #self.field[4][6] = -1
+        #self.add_dangerous_neighbor((4,6))
+        ##5
+        #self.mine_list.add((3,3))
+        #self.field[3][3] = -1
+        #self.add_dangerous_neighbor((3,3))
+        ##6
+        #self.mine_list.add((6,6))
+        #self.field[6][6] = -1
+        #self.add_dangerous_neighbor((6,6))
+        ##7
+        #self.mine_list.add((6,1))
+        #self.field[6][1] = -1
+        #self.add_dangerous_neighbor((6,1))
+        ##8
+        #self.mine_list.add((8,8))
+        #self.field[8][8] = -1
+        #self.add_dangerous_neighbor((8,8))
+        ##9
+        #self.mine_list.add((3,6))
+        #self.field[3][6] = -1
+        #self.add_dangerous_neighbor((3,6))
+        ##10
+        #self.mine_list.add((3,5))
+        #self.field[3][5] = -1
+        #self.add_dangerous_neighbor((3,5))
 
-        #row = 0
-        #col = 0
-        #i = 0
+        row = 0
+        col = 0
+        i = 0
         
-        #while i < self.mine_total:
-        #    row = rand.randint(0, self.size-1)
-        #    col = rand.randint(0, self.size-1)
-        #    self.mine_list.add((row,col))
-        #    i += 1
-        #    if i != len(self.mine_list):
-        #        i -= 1
-        #    else:
-        #        self.field[row][col] = -1
-        #        self.add_dangerous_neighbor((row,col))
+        while i < self.mine_total:
+            row = rand.randint(0, self.size-1)
+            col = rand.randint(0, self.size-1)
+            self.mine_list.add((row,col))
+            i += 1
+            if i != len(self.mine_list):
+                i -= 1
+            else:
+                self.field[row][col] = -1
+                self.add_dangerous_neighbor((row,col))
                 
                 #self.field_dict[(b,a)][0] = True
                 #self.addNeighborMine((a,b))
@@ -487,15 +487,17 @@ class Minefield:
        """Prints the current minefield as seen by the AI at its current progress."""
        print("Mine Locations: " + str(self.mine_list))
        print()
-       #outcome = self.solver.report_outcome()
-       #if len(outcome) == 1:
-       #    print("Win!")
-       #elif outcome[0] == 2:
-       #    print("Lose!")
-       #    print("Boomed at cell: " + str(outcome[1]))
-       #else:
-       #    print("Fluke!")
-       #    print("Boomed at cell: " + str(outcome[1]))
+       if self.game_over:
+           outcome = self.solver.report_outcome()
+           if len(outcome) == 1:
+               print("Win!")
+           elif outcome[0] == 2:
+               print("Lose!")
+               print("Boomed at cell: " + str(outcome[1]))
+           else:
+               print("Fluke!")
+               print("Boomed at cell: " + str(outcome[1]))
+       
        print("Found Mine Cells: " + str(self.solver.mine_cells))
        print("Mines Remaining: " + str(self.solver.mines_remaining))
        print("\n")
