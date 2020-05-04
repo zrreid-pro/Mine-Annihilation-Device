@@ -30,6 +30,7 @@ for i in range(iterations):
     bot = mad.MAD()
     outcome = bot.survey_minefield(mf)
     
+    
     if outcome == 1:
         wins += 1
     elif outcome == 2:
@@ -49,8 +50,7 @@ print("Total Number of Games: " + str(iterations))
 print("Number of Wins: " + str(wins))
 print("Number of Loses: " + str(loses))
 print("Number of Flukes: " + str(flukes))
-print("Engaged Tank: " + str(bot.tanked))
-print("Win Percentage: " + str((wins/(iterations - flukes))*100))
+#print("Win Percentage: " + str((wins/(iterations - flukes))*100))
 
 #bot.show_work()
 

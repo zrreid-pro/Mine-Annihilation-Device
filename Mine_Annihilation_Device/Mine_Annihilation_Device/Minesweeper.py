@@ -486,6 +486,7 @@ class Minefield:
     def print_working_minefield(self):
        """Prints the current minefield as seen by the AI at its current progress."""
        print("Mine Locations: " + str(self.mine_list))
+       print("Engaged Tank: " + str(self.solver.tanked))
        print()
        if self.game_over:
            outcome = self.solver.report_outcome()
