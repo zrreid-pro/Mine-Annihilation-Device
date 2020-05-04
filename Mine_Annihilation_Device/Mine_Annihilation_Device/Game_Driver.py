@@ -7,14 +7,20 @@ import Mine_Annihilation_Device as mad
 #Not currently set up for more than for debugging puposes
 
 #######################################################
-#Change variables in this section for different results
-<<<<<<< HEAD
-difficulty = 3
-iterations = 5
-=======
-difficulty = 2
-iterations = 10
->>>>>>> 67e62a953206cde298f75eeed99de6b64d3d3c59
+print("What difficulty would you like the M.A.D. to try?")
+difficulty = input()
+print("And how many games would you like the M.A.D. to play?")
+iterations = int(input())
+
+if(difficulty == "Beginner"):
+    difficulty = 1
+
+if(difficulty == "Intermediate"):
+    difficulty = 2
+
+if(difficulty == "Expert"):
+    difficulty = 3
+
 #######################################################
 
 wins = 0
@@ -55,7 +61,8 @@ print("Number of Wins: " + str(wins))
 print("Number of Loses: " + str(loses))
 print("Number of Flukes: " + str(flukes))
 print("Engaged Tank: " + str(bot.tanked))
-print("Win Percentage: " + str((wins/(iterations - flukes))*100))
+if((iterations - flukes) != 0):
+    print("Win Percentage: " + str((wins/(iterations - flukes))*100))
 
 #bot.show_work()
 
