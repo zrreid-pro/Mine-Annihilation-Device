@@ -399,7 +399,7 @@ class MAD:
                 self.minefield.temp_way_to_check_for_game_over()
             self.traverse_field()            
 
-            if len(self.moves_made) >= self.initial_stage_break_condition:
+            if len(self.moves_made) + len(self.mine_cells) >= self.initial_stage_break_condition:
                 break
 
         ##########################################################################
