@@ -363,7 +363,7 @@ class MAD:
             if len(temp_field) == 0:
                 continue
             else:
-                next_field = self.validate_placement(next_field, mine, assumed_mines, self.ignore)
+                next_field = temp_field
                 max_mines -= 1
 
         self.generate_possible_solution(next_field, focus_area, focus_area, max_mines)
