@@ -61,13 +61,7 @@ print("Total Number of Games: " + str(iterations))
 print("Number of Wins: " + str(wins))
 print("Number of Loses: " + str(loses))
 print("Number of Flukes: " + str(flukes))
-<<<<<<< HEAD
-print("Engaged Tank: " + str(bot.tanked))
-if((iterations - flukes) != 0):
-    print("Win Percentage: " + str((wins/(iterations - flukes))*100))
-=======
 #print("Win Percentage: " + str((wins/(iterations - flukes))*100))
->>>>>>> 4038039a30a8e6a1644e98c62d23268eb4c943b2
 
 #bot.show_work()
 
