@@ -240,7 +240,7 @@ class MAD:
         return tuple(summary)
 
 
-    #This is supposed to generate a possible configuration of mines in the potential cells
+    
     
     def generate_possible_solution(self, tank_field, area, total_area, mines):
         if mines == 0:
