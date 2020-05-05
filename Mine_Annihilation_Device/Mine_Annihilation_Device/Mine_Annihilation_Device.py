@@ -26,20 +26,17 @@ class MAD:
         self.mine_cells = set([]) #This is the set of mine spaces
         self.outcome = 1 #This tells if the AI has won (1), lost (2), or fluked (3)
         self.boom_cell = None #This is the mine cell that the AI accidentally picked
-        self.current_tank_configurations = []
-
-        #I think it might make more sense to have the AI keep track of the working board
-        #but need to return to that thought later
-        #self.working_field = None
+        self.current_tank_configurations = set([])
 
         self.current_valid_moves = [] #These are the moves left to make
         self.tanked = False
+        self.tank_field = None
+        self.ignore = set([])
+        self.retreaded = False
+        self.tank_neighbor_dict = {}
 
     def survey_minefield(self, minefield):
         self.minefield = minefield
-
-        #self.working_field = np.zeros((self.minefield.size, self.minefield.size), dtype=int)
-
         self.mines_remaining = minefield.mine_total
         self.initial_stage_break_condition = int(minefield.get_field_size()*0.2)
         self.tank_standby_condition = int(minefield.get_field_size()*0.2)
@@ -60,11 +57,9 @@ class MAD:
 
     #This method is the one that makes the moves. It removes the made move from the list of valid moves and eventually updates the move history
     def search_cell(self, cell):
-        self.minefield.search(cell)
-        
+        self.minefield.search(cell)        
         if self.initial_stage_break:
             self.turn += 1
-
         try:
             self.current_valid_moves.remove(cell)
         except:
@@ -74,7 +69,6 @@ class MAD:
     def flag_cell(self, cell):
         if cell not in self.mine_cells:
             self.minefield.flag(cell)
-            #print("Flagged Cell: " + str(cell))
             self.mine_cells.add(cell)
             self.mines_remaining -= 1
             try:
@@ -88,9 +82,7 @@ class MAD:
         try:
             self.current_valid_moves.remove(cell)
         except:
-            print("Update Fail")
             pass
-
 
     def show_work(self):
         """Prints the AI's current working Minefield."""
@@ -103,52 +95,26 @@ class MAD:
         else:
             return (self.outcome, self.boom_cell)
         
-    #Not in use, currently using other solver, just ignore this
-    def do_work(self):
-        """This is the overall solving method."""
-        #do the work
-        move = None
-
-        if self.current_strategy == 0: #random move
-            move = self.random_move(self.current_valid_moves)
-        elif self.current_strategy == 1: #straightfoward
-            pass
-        elif self.current_strategy == 2: #multisquare
-            pass
-        else: #tank
-            pass
-
-        pass
-
-
     #The equivalent of Evan's find_mines
     def traverse_helper(self, cell):
         count = 0
-
         if not self.minefield.is_nervous(cell):
             return
         else:
             count = self.minefield.count_neighbor_mines(cell) #Gets the number from the cell
-
         neighbors = self.minefield.get_unvisited_neighbors(cell) #Gets the unvisited neighbors, it's the functional equivalent of counting *'s
-
         if len(neighbors) == count:
             for n in neighbors:
                 self.flag_cell(n)
-                
-        pass
 
     #The equivalent of Evan's find_mine_field
     def traverse_field(self):
         for i in range(self.minefield.size):
             for j in range(self.minefield.size):
                 self.traverse_helper((i,j))
-        pass
-
 
     def multisquare_helper(self, cell):
         if not self.minefield.is_nervous(cell):
-            #print("Multisquare First Check")
             return []
 
         count = self.minefield.count_neighbor_mines(cell)
@@ -165,33 +131,21 @@ class MAD:
         if num_mines == count:
             return cells
         else:
-            #print("Multisquare Second Check")
             return []
-
 
     def multisquare(self):
         moves = set([])
-
         for i in range(self.minefield.size):
             for j in range(self.minefield.size):
                 if self.minefield.is_nervous((i,j)):
                     possible_moves = self.multisquare_helper((i,j))
                     if len(possible_moves) != 0:
                         moves.update(possible_moves)
-
         moves.difference_update(self.moves_made)
-
         if len(moves) == 0:
             return False
-
         return moves
 
-
-    #Makes an array copy of the field and then fills it with the effective counts
-    #Effective count is basically the number the cell usually has - the number of flags around it
-    #If a cell isnt visited, it goes in as a 0
-    #If a cell is a flag that is only touching numbered cells with effective counts at 0, it's irrelevant and also goes in as a 0
-    #If the flagged cell is relevant, it goes in as 9
     def generate_relevant_field(self): #Works
         field = np.copy(self.minefield.working_field)
         for i in range(self.minefield.size):
@@ -204,22 +158,7 @@ class MAD:
                         field[i][j] = 9
                 else:
                     field[i][j] = e_count
-        #self.shave_field(field)
         return field
-        #return self.shave_field(field)
-    
-    #Not in use, was an idea to shrink the array I'm working with that didnt pan out
-    def shave_field(self, field):
-        new_num_rows = len(field)
-        new_num_cols = len(field[0])
-
-        row_sum = np.sum(field, axis=1)
-        print("Row_sum: " + str(row_sum))
-
-        #for i in range(len(field[0])):
-        #    for j in range(len(field[0][0])):
-
-        return
 
     #This generates the relevant areas. (Think the pictures in the linked site that only show a small portion of the board)
     #I dont have any reason to believe that this doesnt work at the moment
@@ -276,7 +215,13 @@ class MAD:
     def validate_placement(self, tank_field, cell, area, ignore):
         new_field = np.copy(tank_field)
         new_field[cell[0]][cell[1]] = 11
-        neighbors = self.minefield.get_neighbors(cell)
+
+        if cell in self.tank_neighbor_dict.keys():
+            neighbors = self.tank_neighbor_dict[cell]
+        else:
+            neighbors = self.minefield.get_neighbors(cell)
+            self.tank_neighbor_dict[cell] = neighbors
+        
         for n in neighbors:
             if not n in ignore and new_field[n[0]][n[1]] != 11 and new_field[n[0]][n[1]] != 9 and not n in area:
                 new_field[n[0]][n[1]] -= 1
@@ -285,42 +230,38 @@ class MAD:
 
         return new_field #The placement works and so the possible placement is accepted
 
+    def convert_field(self, area, field):
+        summary = []
+        for cell in area:
+            if field[cell[0]][cell[1]] == 11:
+                summary.append(1)
+            else:
+                summary.append(0)
+        return tuple(summary)
+
 
     #This is supposed to generate a possible configuration of mines in the potential cells
     
-    def generate_possible_solution(self, tank_field, area, total_area, mines, ignore=[]):
+    def generate_possible_solution(self, tank_field, area, total_area, mines):
         if mines == 0:
-            #self.current_tank_configurations.add(tank_field)
-            self.current_tank_configurations.append(tank_field)
+            self.current_tank_configurations.add(self.convert_field(total_area, tank_field))
             return
-            #return tank_field
         elif len(area) == 0:
-            #self.current_tank_configurations.add(tank_field)
-            self.current_tank_configurations.append(tank_field)
+            self.current_tank_configurations.add(self.convert_field(total_area, tank_field))
             return
-            #return tank_field
 
-        if not ignore:
-            #ignore = []
+        if not self.ignore:
             for i in range(len(tank_field)):
                 for j in range(len(tank_field)):
                     if tank_field[i][j] == 0 and not (i,j) in area:
-                        ignore.append((i,j))
+                        self.ignore.add((i,j))
 
-        #solutions = []
-        next_field = self.validate_placement(tank_field, area[0], total_area, ignore)
-        #print("Attempted to place: " + str(area[0]))
-        #print("Next Field:\n" + str(next_field))
+        next_field = self.validate_placement(tank_field, area[0], total_area, self.ignore)
         if len(next_field) == 0:
-            self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore)
-            #solutions.append(self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore))
-            #self.current_tank_configurations.append()
+            self.generate_possible_solution(tank_field, area[1:], total_area, mines)
         else:
-            #solutions.append(self.generate_possible_solution(next_field, area[1:], total_area, mines-1, ignore))
-            #solutions.append(self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore))
-            self.generate_possible_solution(next_field, area[1:], total_area, mines-1, ignore)
-            self.generate_possible_solution(tank_field, area[1:], total_area, mines, ignore)
-
+            self.generate_possible_solution(next_field, area[1:], total_area, mines-1)
+            self.generate_possible_solution(tank_field, area[1:], total_area, mines)
 
         return
 
@@ -330,65 +271,53 @@ class MAD:
         percentage_results = np.zeros(len(area), dtype=float)
         for config in self.current_tank_configurations:
             for n in range(len(area)):
-                i = area[n][0]
-                j = area[n][1]
-                if config[i][j] == 11:
+                #i = area[n][0]
+                #j = area[n][1]
+                if config[n] == 11:
                     results[n] += 1
             total_configs += 1
 
-        #print("Total Configs: " + str(total_configs))
-        #print("Results: " + str(results))
         for result in range(len(results)):
             percentage_results[result] = results[result]/total_configs
-
-        #print("Tank Area:\n" + str(area))
-        #print("Tank Results:\n" + str(percentage_results))
 
         return percentage_results
 
     def determine_best_move(self, area):
-        tank_field = self.generate_relevant_field()
-        #print("Tank Field:\n" + str(tank_field))
-        #possible_solutions = set([])
+        self.tank_field = self.generate_relevant_field()
         max_mines = self.mines_remaining
-        self.current_tank_configurations = []
-        self.generate_possible_solution(tank_field, area, area, max_mines)
+        self.current_tank_configurations.clear()
+        self.generate_possible_solution(self.tank_field, area, area, max_mines)
         results = self.crunch_the_numbers(area)
+
+        min_percentage = 2
+        max_percentage = -1
+        min_index = 0
+        max_index = 0
+        min_moves = []
+        max_moves = []
+        for i in range(len(area)):
+            if results[i] < min_percentage:
+                min_percentage = results[i]
+                min_index = i
+                min_moves = []
+                min_moves.append(area[i])
+            elif results[i] == min_percentage:
+                min_moves.append(area[i])
+            if results[i] > max_percentage:
+                max_percentage = results[i]
+                max_index = i
+                max_moves = []
+                max_moves.append(area[i])
+            elif results[i] == max_percentage:
+                max_moves.append(area[i])
+
+        if len(min_moves) < 2:
+            min_index = np.argmin(results)
+            return (area[min_index], min_percentage)
+        else:
+            results = self.tank_refine(min_moves, max_moves)
         min_index = np.argmin(results)
-        return (area[min_index], results[min_index])
-        #solutions = self.generate_possible_solution(tank_field, area, area, max_mines)
-        #for s in range(len(self.current_tank_configurations)):
-        #    print("Solution " + str(s+1) + "\n" + str(self.current_tank_configurations[s]))
-
-
-
-        #print("Solution:\n" + str(solution))
-
-        #for i in range(self.minefield.size):
-        #    for j in range(self.minefield.size):
-
-        #        if tank_field[i][j]==0:
-        #            continue
-
-        #        surrounding = 0
-        #        if (i == 0 and j == 0) or (i == len(tank_field)-1 and j == len(tank_field)-1):
-        #            surrounding = 3
-        #        elif (i == 0 or j == 0 or i == len(tank_field)-1 or len(tank_field)-1):
-        #            surrounding = 5
-        #        else:
-        #            surrounding = 8
-
-        #        numflags = self.minefield.count_flagged_neighbors((i,j))
-
-        
-
-
-
-
-        #return
-
-    
-
+        return (min_moves[min_index], results[min_index])
 
     def tank(self):
         self.tanked = True
@@ -396,13 +325,10 @@ class MAD:
         for cell in self.current_valid_moves: #Narrows it down to border cells
             if self.minefield.is_interesting(cell):
                 focus_cells.append(cell)
-        #print("Tank Cells: " + str(focus_cells))
 
         endgame = False
         if ((len(self.current_valid_moves)-len(focus_cells)) > self.endgame_threshold):
             endgame = True
-        #else: #Not necessary but that's what he did
-        #   focus_cells = self.current_valid_moves
         
         separate = [] #supposed to be a list of lists containing cells
         if not endgame:
@@ -410,14 +336,9 @@ class MAD:
         else:
             separate = self.identify_relevant_area(focus_cells)
 
-        #print("Separate Area(s): " + str(separate))
-        #print("At Length: " + str(len(separate)))
-
         possible_moves = []
         for section in separate:
             possible_moves.append(self.determine_best_move(section))
-
-        #print("Possible Tank Moves: " + str(possible_moves))
 
         min_percentage = 1
         min_index = 0
@@ -428,6 +349,31 @@ class MAD:
                 min_index = i
 
         return possible_moves[min_index][0]
+
+    def tank_refine(self, focus_area, assumed_mines):
+        self.retreaded = True
+        self.current_tank_configurations.clear()
+        next_field = self.validate_placement(self.tank_field, assumed_mines[0], assumed_mines, self.ignore)
+        max_mines = self.mines_remaining-1
+
+        if len(assumed_mines) != 1:
+            assumed_mines = assumed_mines[1:]
+        for mine in assumed_mines:
+            temp_field = self.validate_placement(next_field, mine, assumed_mines, self.ignore)
+            if len(temp_field) == 0:
+                continue
+            else:
+                next_field = self.validate_placement(next_field, mine, assumed_mines, self.ignore)
+                max_mines -= 1
+
+        self.generate_possible_solution(next_field, focus_area, focus_area, max_mines)
+        return self.crunch_the_numbers(focus_area)
+
+    def tank_reset(self):
+        self.current_tank_configurations.clear()
+        self.ignore.clear()
+        self.tank_field = None
+        self.retreaded = False
 
     def boom(self, cell):
         """
@@ -449,27 +395,11 @@ class MAD:
             move = self.random_move(self.current_valid_moves)
             if(move not in self.mine_cells) and (move not in self.moves_made):
                 self.search_cell(move)
-                #print("Random Move: " + str(move))
                 self.turn += 1
-                #self.show_work()
                 self.minefield.temp_way_to_check_for_game_over()
-            self.traverse_field()
-            
-            #move = (0,0)
-            #self.search_cell(move)
-            ##print("Random Move: " + str(move))
-            #self.turn += 1
-            ##self.show_work()
-            #self.traverse_field()
-            #move = (2,3)
-            #self.search_cell(move)
-            ##print("Random Move: " + str(move))
-            #self.turn += 1
-            ##self.show_work()
-            #self.traverse_field()
+            self.traverse_field()            
 
             if len(self.moves_made) >= self.initial_stage_break_condition:
-                #Currently doesn't count flagging a cell as making a move so it may be something to adjust later
                 break
 
         ##########################################################################
@@ -480,28 +410,20 @@ class MAD:
         while(not self.minefield.game_over and self.mines_remaining > 0):
             if not self.tank_on_standby:
                 if len(self.moves_made) > self.tank_standby_condition:
-                    #print("Tank Starting Up!")
                     self.tank_on_standby = True
 
             moves = self.multisquare()
-            #print("Multi-square Moves: " + str(moves))
             if not moves:
                 if self.tank_on_standby:
-                    #print("Tank Start!")
                     move = self.tank()
                     self.search_cell(move)
-                    #print("Tank Time: " + str(move))
                 else:
                     move = self.current_valid_moves[0]
                     self.search_cell(move)
-                    #print("Multi-square had squat: " + str(move))              
-                #self.show_work()
             else:
                 while len(moves) > 0:
                     move = moves.pop()
                     self.search_cell(move)
-                    #print("Multi-square Move: " + str(move))
-                    #self.show_work()
                     if self.minefield.game_over:
                         break
 
