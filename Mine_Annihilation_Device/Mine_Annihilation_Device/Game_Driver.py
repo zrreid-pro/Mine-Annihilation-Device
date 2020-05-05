@@ -28,11 +28,8 @@ loses = 0
 flukes = 0
 
 
-#mf = game.Minefield(difficulty)
-#bot = mad.MAD()
-#bot.survey_minefield(mf)
-
-
+#difficulty = 1
+#iterations = 1
 
 #while loses == 0:
 #while wins == 0 and loses == 0:
@@ -61,16 +58,18 @@ print("Total Number of Games: " + str(iterations))
 print("Number of Wins: " + str(wins))
 print("Number of Loses: " + str(loses))
 print("Number of Flukes: " + str(flukes))
+<<<<<<< HEAD
 #print("Win Percentage: " + str((wins/(iterations - flukes))*100))
 
 #bot.show_work()
 
 #print("\n\nAnswer Minefield")
 #mf.print_answer_minefield()
+=======
+if((iterations - flukes) != 0):
+    print("Win Percentage: " + str((wins/(iterations - flukes))*100))
+>>>>>>> e06351b1cc1628dd013ff66744fd3cdd149fc40d
 
-#print("Mines Remaining: " + str(bot.mines_remaining))
-#print("Moves Made:")
-#print(bot.moves_made)
 
 
     
