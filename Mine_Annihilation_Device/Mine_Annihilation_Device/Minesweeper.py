@@ -34,15 +34,15 @@ class Minefield:
         self.mine_list = set([])
         self.fill_minefield()
 
-    #cell value (row, column) = [visited, probabilityOfMine]
-    #currently is: cell value (row, column) = visited
-    #cell value legend:
-        #0 = empty
-        #-1 = mine
-        #1-8 = numbered cell
-        #9 = flagged cell
     def fill_minefield(self):
-        #For the dictionary parts
+        """
+        This method places the correct number of mines in random locations on the board.
+        The possible values that a cell can have are:
+        0 = empty cell with no neighboring mines
+        -1 = a mine cell
+        1-8 = numbered cell where the number is the number of neighboring mines
+        9 = a flagged cell
+        """
         for i in range(self.size):
             for j in range(self.size):
                 self.field_dict[(i,j)] = False
@@ -66,7 +66,7 @@ class Minefield:
         """Adds to the count of each of a mine's neighbors excluding those that are also mines."""
         neighbors = self.get_neighbors(cell)
         for n in neighbors:
-            if self.field[n[0]][n[1]] >= 0: #less than 0 means that the cell is already a mine
+            if self.field[n[0]][n[1]] >= 0:
                 self.field[n[0]][n[1]] += 1
 
     def get_field_size(self):
@@ -74,6 +74,7 @@ class Minefield:
         return self.size*self.size   
 
     def set_solver(self, solver):
+        """Sets the game's solver attribute to the argument AI passed to this method"""
         self.solver = solver
 
     def get_neighbors(self, cell):
@@ -129,6 +130,7 @@ class Minefield:
         return neighbors
 
     def get_visited_neighbors(self, cell):
+        """Returns a list of all the visited neighbors of the argument cell."""
         neighbors = []
         if cell[1] != 0: #left
             if self.is_visited((cell[0], cell[1]-1)):
@@ -158,6 +160,7 @@ class Minefield:
         return neighbors
 
     def count_flagged_neighbors(self, cell):
+        """Returns the number of flagged neighbors of the argument cell."""
         flagged = 0
         if cell[1] != 0: #left
             if self.is_flagged((cell[0], cell[1]-1)):
@@ -186,36 +189,8 @@ class Minefield:
 
         return flagged
 
-    def get_constraining_neighbors(self, cell):
-        neighbors = []
-        if cell[1] != 0: #left
-            if self.is_flagged((cell[0], cell[1]-1)) or self.effective_count((cell[0], cell[1]-1)) > 0:
-                neighbors.append((cell[0], cell[1]-1))            
-        if cell[1] != self.size-1: #right
-            if self.is_flagged((cell[0], cell[1]+1)) or self.effective_count((cell[0], cell[1]+1)) > 0:
-                neighbors.append((cell[0], cell[1]+1))
-        if cell[0] != 0: #up
-            if self.is_flagged((cell[0]-1, cell[1])) or self.effective_count((cell[0]-1, cell[1])) > 0:
-                neighbors.append((cell[0]-1, cell[1]))
-        if cell[0] != self.size-1: #down
-            if self.is_flagged((cell[0]+1, cell[1])) or self.effective_count((cell[0]+1, cell[1])) > 0:
-                neighbors.append((cell[0]+1, cell[1]))
-        if cell[0] != 0 and cell[1] != 0: #upper-left
-            if self.is_flagged((cell[0]-1, cell[1]-1)) or self.effective_count((cell[0]-1, cell[1]-1)) > 0:
-                neighbors.append((cell[0]-1, cell[1]-1))
-        if cell[0] != 0 and cell[1] != self.size-1: #upper-right
-            if self.is_flagged((cell[0]-1, cell[1]+1)) or self.effective_count((cell[0]-1, cell[1]+1)) > 0:
-                neighbors.append((cell[0]-1, cell[1]+1))
-        if cell[0] != self.size-1 and cell[1] != 0: #lower-left
-            if self.is_flagged((cell[0]+1, cell[1]-1)) or self.effective_count((cell[0]+1, cell[1]-1)) > 0:
-                neighbors.append((cell[0]+1, cell[1]-1))
-        if cell[0] != self.size-1 and cell[1] != self.size-1: #lower-right
-            if self.is_flagged((cell[0]+1, cell[1]+1)) or self.effective_count((cell[0]+1, cell[1]+1)) > 0:
-                neighbors.append((cell[0]+1, cell[1]+1))
-
-        return neighbors
-
     def is_chained(self, cell_1, cell_2):
+        """Returns whether the two argument cells are neighbors."""
         if cell_1[1] != 0: #left
             if self.compare_cells((cell_1[0],cell_1[1]-1),cell_2):
                 return True            
@@ -244,9 +219,11 @@ class Minefield:
         return False
 
     def compare_cells(self, cell_1, cell_2):
+        """Returns whether the two argument cells are the same cell."""
         return (cell_1[0] == cell_2[0] and cell_1[1] == cell_2[1])
 
     def is_irrelevant(self, cell):
+        """Returns whether the argument cell should still be taken into consideration during the tank algorithm."""
         neighbors = self.get_neighbors(cell)
         for n in neighbors:
             if self.effective_count(n) != 0:
@@ -254,6 +231,7 @@ class Minefield:
         return True
 
     def effective_count(self, cell):
+        """Returns the argument cell's number minus the number of flagged neighbor cells."""
         if self.is_flagged(cell):
             return 9
         elif not self.is_visited(cell):
@@ -286,9 +264,11 @@ class Minefield:
                 self.clear_empties(cell)
 
     def is_border_cell(self, cell):
+        """Returns whether the argument cell is on an edge of the minefield."""
         return (cell[0] == 0 or cell[0] == self.size-1 or cell[1] == 0 or cell[1] == self.size-1)
 
     def is_interesting(self, cell):
+        """Returns whether the unvisited argument cell has any neighbors that are visited that provide information about the argument cell."""
         if cell[1] != 0: #left
             if self.is_visited((cell[0], cell[1]-1)):
                 return True            
@@ -339,8 +319,6 @@ class Minefield:
             for n in neighbors:
                 self.search(n)
 
-        pass
-
     def get_valid_moves(self):
         """Returns a list of the valid moves given the current state of the working minefield"""
         move_list = []
@@ -379,7 +357,6 @@ class Minefield:
     def print_working_minefield(self):
        """Prints the current minefield as seen by the AI at its current progress."""
        print("Mine Locations: " + str(self.mine_list))
-       #print("Engaged Tank: " + str(self.solver.tanked))
        print()
        if self.game_over:
            outcome = self.solver.report_outcome()
@@ -419,6 +396,7 @@ class Minefield:
        pass
 
     def temp_way_to_check_for_game_over(self):
-       moves = self.get_valid_moves()
-       if len(moves) == 0:
-           self.game_over = True
+        """Changes the game's game_over attribute if the number of remaining valid moves is zero."""
+        moves = self.get_valid_moves()
+        if len(moves) == 0:
+            self.game_over = True

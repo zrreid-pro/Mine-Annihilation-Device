@@ -2,9 +2,6 @@
 import Minesweeper as game
 import Mine_Annihilation_Device as mad
 
-#IMPORTANT: ALTER TO USE USER INPUT RATHER THAN WHAT IT'S CURRENTLY DOING
-
-#Not currently set up for more than for debugging puposes
 
 #######################################################
 print("What difficulty would you like the M.A.D. to try?")
@@ -28,11 +25,7 @@ loses = 0
 flukes = 0
 
 
-#difficulty = 1
-#iterations = 1
 
-#while loses == 0:
-#while wins == 0 and loses == 0:
 for i in range(iterations):
     mf = game.Minefield(difficulty)
     bot = mad.MAD()

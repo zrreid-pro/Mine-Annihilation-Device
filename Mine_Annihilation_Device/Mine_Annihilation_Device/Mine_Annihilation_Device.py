@@ -27,7 +27,6 @@ class MAD:
         self.outcome = 1 #This tells if the AI has won (1), lost (2), or fluked (3)
         self.boom_cell = None #This is the mine cell that the AI accidentally picked
         self.current_tank_configurations = set([])
-
         self.current_valid_moves = [] #These are the moves left to make
         self.tanked = False
         self.tank_field = None
@@ -36,6 +35,7 @@ class MAD:
         self.tank_neighbor_dict = {}
 
     def survey_minefield(self, minefield):
+        """Takes an argument minefield and initializes the important attribute of the MAD AI in preparation for solving the game."""
         self.minefield = minefield
         self.mines_remaining = minefield.mine_total
         self.initial_stage_break_condition = int(minefield.get_field_size()*0.2)
@@ -47,16 +47,16 @@ class MAD:
         self.show_work()
         return self.outcome
 
-    #Returns a random move that can still be made, basically your start method
     def random_move(self, valid_moves):
+        """Returns a valid random move from the argument list of valid moves."""
         while(True):
             row = rand.randint(0, self.minefield.get_field_size()-1)
             col = rand.randint(0, self.minefield.get_field_size()-1)
             if (row,col) in valid_moves:
                 return (row, col)
 
-    #This method is the one that makes the moves. It removes the made move from the list of valid moves and eventually updates the move history
     def search_cell(self, cell):
+        """Uses the argument cell as an input to make a move for the current game."""
         self.minefield.search(cell)        
         if self.initial_stage_break:
             self.turn += 1
@@ -65,8 +65,8 @@ class MAD:
         except:
             pass
 
-    #Calls flag method from game, adds mine to mine list, lowers remaining mine count, removes move from valid moves
     def flag_cell(self, cell):
+        """Uses the argument cell as an input to flag a cell for the current game."""
         if cell not in self.mine_cells:
             self.minefield.flag(cell)
             self.mine_cells.add(cell)
@@ -76,8 +76,8 @@ class MAD:
             except:
                 pass
 
-    #This is called by the minesweeper game whenever a move is made
     def update_history(self, cell):
+        """Is called from the current game. It updates the moves made attribute with the argument cell."""
         self.moves_made.append(cell)
         try:
             self.current_valid_moves.remove(cell)
@@ -95,25 +95,28 @@ class MAD:
         else:
             return (self.outcome, self.boom_cell)
         
-    #The equivalent of Evan's find_mines
     def traverse_helper(self, cell):
+        """This is a helper for the traverse field method. If the number of unvisited neighbor
+        cells equals the cell's number, then it flags all neighboring unvisited cells."""
         count = 0
         if not self.minefield.is_nervous(cell):
             return
         else:
-            count = self.minefield.count_neighbor_mines(cell) #Gets the number from the cell
-        neighbors = self.minefield.get_unvisited_neighbors(cell) #Gets the unvisited neighbors, it's the functional equivalent of counting *'s
+            count = self.minefield.count_neighbor_mines(cell)
+        neighbors = self.minefield.get_unvisited_neighbors(cell)
         if len(neighbors) == count:
             for n in neighbors:
                 self.flag_cell(n)
 
-    #The equivalent of Evan's find_mine_field
     def traverse_field(self):
+        """This is the straightforward algorithm. It traverses the field
+        flagging in the obvious places where there is a mine."""
         for i in range(self.minefield.size):
             for j in range(self.minefield.size):
                 self.traverse_helper((i,j))
 
     def multisquare_helper(self, cell):
+        """This is a helper for the multisquare algorithm. It checks for the safe moves neighboring the argument cell and returns the list."""
         if not self.minefield.is_nervous(cell):
             return []
 
@@ -134,6 +137,8 @@ class MAD:
             return []
 
     def multisquare(self):
+        """This is the multisquare algorithm. It takes into account multiple
+        different numbered cells to return a list of cells that are safe to visit."""
         moves = set([])
         for i in range(self.minefield.size):
             for j in range(self.minefield.size):
@@ -146,7 +151,9 @@ class MAD:
             return False
         return moves
 
-    def generate_relevant_field(self): #Works
+    def generate_relevant_field(self):
+        """Part of the Tank algorithm.
+        Returns a copy of the working minefield with the irrelevant cells and their numbers phased out."""
         field = np.copy(self.minefield.working_field)
         for i in range(self.minefield.size):
             for j in range(self.minefield.size):
@@ -160,15 +167,14 @@ class MAD:
                     field[i][j] = e_count
         return field
 
-    #This generates the relevant areas. (Think the pictures in the linked site that only show a small portion of the board)
-    #I dont have any reason to believe that this doesnt work at the moment
-    def identify_relevant_area(self, focus_cells): #works to my knowledge
-        all_areas = [] #allRegions
-        addressed = [] #covered
+    def identify_relevant_area(self, focus_cells):
+        """Part of the Tank algorithm. Returns the disjointed regions of the argument focus cells."""
+        all_areas = []
+        addressed = []
 
         while(True):
-            queue = [] #queue
-            finished = [] #finishedRegion
+            queue = []
+            finished = []
 
             for f_cell in focus_cells:
                 if f_cell not in addressed:
@@ -208,11 +214,10 @@ class MAD:
 
         return all_areas
 
-    #This places a flag on the tank_field at the place of the cell arg
-    #If any of the cell's neighbors' counts becomes a negative, the placement is invalid and it returns an empty list
-    #The ignore arg is a list of cells to ignore.
-    #These are cells that arent touching the potential mine cells or the numbered cells bordering the potential mine cells
     def validate_placement(self, tank_field, cell, area, ignore):
+        """Part of the Tank algorithm.
+        It attempts to place a pseudo mine at the location of the argument cell on the argument tank field.
+        Returns the field with the pseudo mine successfully placed or an empty list if the placement fails."""
         new_field = np.copy(tank_field)
         new_field[cell[0]][cell[1]] = 11
 
@@ -228,21 +233,25 @@ class MAD:
                 if new_field[n[0]][n[1]] < 0:
                     return []
 
-        return new_field #The placement works and so the possible placement is accepted
+        return new_field
 
     def convert_field(self, area, field):
+        """Part of the Tank algorithm.
+        Converts the argument relevant field into a hashable
+        tuple to be stored in the current tank configurations attribute.
+        At their respective indeces, either a 1 is placed to represent a pseudo mine being placed in that cell
+        or a 0 to represent a cell that didn't receive one."""
         summary = []
         for cell in area:
             if field[cell[0]][cell[1]] == 11:
                 summary.append(1)
             else:
                 summary.append(0)
-        return tuple(summary)
-
-
-    
+        return tuple(summary)    
     
     def generate_possible_solution(self, tank_field, area, total_area, mines):
+        """Part of the Tank algorithm. Recurses through the argument area to place pseudo mines in all potential configurations and adds each
+        finished one to the current tank configurations attribute."""
         if mines == 0:
             self.current_tank_configurations.add(self.convert_field(total_area, tank_field))
             return
@@ -266,13 +275,14 @@ class MAD:
         return
 
     def crunch_the_numbers(self, area):
+        """Part of the Tank algorithm. It takes the cells in the argument area and tallies the number of times
+        a pseudo mine was placed in that cell for each generated tank configuration.
+        Returns the results as a list of percentages with indeces respective to the indeces of the argument area."""
         total_configs = 0
         results = np.zeros(len(area), dtype=int)
         percentage_results = np.zeros(len(area), dtype=float)
         for config in self.current_tank_configurations:
             for n in range(len(area)):
-                #i = area[n][0]
-                #j = area[n][1]
                 if config[n] == 11:
                     results[n] += 1
             total_configs += 1
@@ -283,6 +293,10 @@ class MAD:
         return percentage_results
 
     def determine_best_move(self, area):
+        """Part of the Tank algorithm. Based of the argument area, the method determines the cell with the least
+        probability of being a mine. If multiple probabilities are tied for the lowest,
+        a portion of the Tank algorithm is rerun focusing on the cells with the least probability while assuming
+        that the ones with the highest probility are potential mines."""
         self.tank_field = self.generate_relevant_field()
         max_mines = self.mines_remaining
         self.current_tank_configurations.clear()
@@ -320,9 +334,13 @@ class MAD:
         return (min_moves[min_index], results[min_index])
 
     def tank(self):
+        """This is the Tank algorithm. It narrows the number of valid moves to the ones that the AI has knowledge about
+        and by generating the possible configurations of cells that could potentially hold mines, it is able to determine
+        the cell with the least likelihood of being a mine. It does so by placing hypothetical mines, called pseudo mines,
+       on a minefield with only the relevant cells remaining on it. Returns the move with the lowest probability of being a mine."""
         self.tanked = True
         focus_cells = []
-        for cell in self.current_valid_moves: #Narrows it down to border cells
+        for cell in self.current_valid_moves:
             if self.minefield.is_interesting(cell):
                 focus_cells.append(cell)
 
@@ -330,7 +348,7 @@ class MAD:
         if ((len(self.current_valid_moves)-len(focus_cells)) > self.endgame_threshold):
             endgame = True
         
-        separate = [] #supposed to be a list of lists containing cells
+        separate = []
         if not endgame:
             separate.append(focus_cells)
         else:
@@ -351,6 +369,9 @@ class MAD:
         return possible_moves[min_index][0]
 
     def tank_refine(self, focus_area, assumed_mines):
+        """Part of the Tank algorithm. This method runs a smaller scale version of the Tank algorithm in the case that
+        there is a tie for the cell with the lowest probability for being a mine. Returns the move from the new lowest
+        calculated probability."""
         self.retreaded = True
         self.current_tank_configurations.clear()
         next_field = self.validate_placement(self.tank_field, assumed_mines[0], assumed_mines, self.ignore)
@@ -370,10 +391,13 @@ class MAD:
         return self.crunch_the_numbers(focus_area)
 
     def tank_reset(self):
+        """To be called after the Tank algorithm concludes. It resets all of the relevant attributes used by the Tank
+        algorithm so that it can be used again should the need arrise."""
         self.current_tank_configurations.clear()
         self.ignore.clear()
         self.tank_field = None
         self.retreaded = False
+        return
 
     def boom(self, cell):
         """
@@ -387,7 +411,9 @@ class MAD:
             self.outcome = 2
 
     def find_mines(self):
-
+        """This is the overall solving method. It starts out making random moves until enough of the board is cleared
+        to be able to start algorithmically locating the rest of the hidden mines. The algorithmic phase of the method begins
+        with the Multisquare algorithm and moves on to the Tank algorithm if it fails to identify a safe move to make."""
         ##########################################################################
         #Beginning Stage
         ##########################################################################
